@@ -1,12 +1,13 @@
 name: CI/CD Workflow
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+  # pull_request:
+  #   branches:
+  #     - main
 
 permissions:
   id-token: write
@@ -34,40 +35,42 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-    - name: Check out code
-      uses: actions/checkout@v4
+      - name: Check out code
+        uses: actions/checkout@v4
 
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v4
-      with:
-        go-version: '^1.21'
-      id: go
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v4
+        with:
+          go-version: "^1.21"
+        id: go
 
-    - name: Install golang-migrate
-      run: |
-        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.16.2/migrate.linux-amd64.tar.gz | tar xvz
-        sudo mv migrate /usr/bin/migrate
-        which migrate
+      - name: Install golang-migrate
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.16.2/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/bin/migrate
+          which migrate
 
-    - name: Run migrations
-      run: make migrate_up
+      - name: Run migrations
+        run: make migrate_up
 
-    - name: Test
-      run: make test
+      - name: Test
+        run: make test
 
   deploy:
     name: Build & deploy image
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs:
+      - test
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/master')
     steps:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
-           version: '1.29.0'
-        id: install
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -76,30 +79,21 @@ jobs:
           aws-region: $AWS_REGION
 
       - name: Load secrets and save to app.env
-        run: aws secretsmanager get-secret-value --secret-id go-simple-bank --query SecretString --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' > app.env
+        run: aws secretsmanager get-secret-value --secret-id simple-bank --query SecretString --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' > app.env
 
-      - name: Login to Amazon ECR Private
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/simple-bank
+          tags: |
+            type=ref,event=pr
+            type=ref,event=tag
+            type=sha
 
-      - name: Build, tag, and push docker image to Amazon ECR
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: go-simple-bank
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-          docker push -a $REGISTRY/$REPOSITORY
-
-      - name: Update kube config
-        run: aws eks update-kubeconfig --name go-simple-bank-eks --region $AWS_REGION
-
-      - name: Deploy image to Amazon EKS
-        run: |
-          kubectl apply -f eks/aws-auth.yaml
-          kubectl apply -f eks/deployment.yaml
-          kubectl apply -f eks/service.yaml
-          kubectl apply -f eks/issuer.yaml
-          kubectl apply -f eks/ingress-nginx.yaml
-          kubectl apply -f eks/ingress-http.yaml
-          kubectl apply -f eks/ingress-grpc.yaml
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
