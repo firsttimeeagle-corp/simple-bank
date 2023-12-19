@@ -13,9 +13,6 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  AWS_REGION: ap-southeast-1
-
 jobs:
   # test:
   #   name: Test
@@ -76,7 +73,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::290922543121:role/github-actions-role
-          aws-region: "$AWS_REGION"
+          aws-region: ap-southeast-1
 
       - name: Load secrets and save to app.env
         run: aws secretsmanager get-secret-value --secret-id simple-bank --query SecretString --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' > app.env
