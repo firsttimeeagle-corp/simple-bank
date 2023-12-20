@@ -17,11 +17,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       
-      - name: Get latest commit SHA
-        id: get_sha
+      - name: Get latest SHA
         run: |
-          echo "latest_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-        
-      - name: Use latest SHA
-        run: |
-          echo "Latest commit SHA: ${{ steps.get_sha.outputs.latest_sha }}"
+          echo "Latest commit SHA: $GITHUB_SHA"
