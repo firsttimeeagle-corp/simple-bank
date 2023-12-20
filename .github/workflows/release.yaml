@@ -1,0 +1,15 @@
+name: Release Workflow
+
+on:
+  workflow_dispatch:
+  release:
+    types:
+      - "released"
+
+jobs:
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hello world
+        run: echo "Deployed to production"
