@@ -17,6 +17,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       
-      - name: Get latest SHA
+      - name: Promote new image tag
+        env:
+          OLD_IMAGE: brizaldi/simple-bank:$GITHUB_SHA
+          NEW_IMAGE: brizaldi/simple-bank:${{ github.event.release.tag_name }}
         run: |
-          echo "Latest commit SHA: $GITHUB_SHA"
+          docker pull $OLD_IMAGE
+          docker tag $OLD_IMAGE $NEW_IMAGE
+          docker push $NEW_IMAGE
