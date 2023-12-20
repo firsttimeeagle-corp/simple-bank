@@ -1,4 +1,4 @@
-name: PR Workflow
+name: Pull Request
 
 on:
   workflow_dispatch:

@@ -1,4 +1,4 @@
-name: Pre-release Workflow
+name: Pre-release
 
 on:
   workflow_dispatch:
@@ -19,7 +19,7 @@ jobs:
       
       - name: Promote new image tag
         env:
-          OLD_IMAGE: brizaldi/simple-bank:$GITHUB_SHA
+          OLD_IMAGE: brizaldi/simple-bank:sha-$GITHUB_SHA
           NEW_IMAGE: brizaldi/simple-bank:${{ github.event.release.tag_name }}
         run: |
           docker pull $OLD_IMAGE
