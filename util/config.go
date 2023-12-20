@@ -17,6 +17,7 @@ type Config struct {
 	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
 	UseGRPCGateway       bool          `mapstructure:"USE_GRPC_GATEWAY"`
+	AppVersion           string        `mapstructure:"APP_VERSION"`
 }
 
 // LoadConfig reads configuration from file or environment variables.
