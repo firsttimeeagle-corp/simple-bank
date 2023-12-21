@@ -34,7 +34,7 @@ jobs:
         env:
           NEW_VER: ${{ github.event.release.tag_name }}
         run: |
-          sed -i -e "s/newTag:.*/newTag: ${{ env.NEW_VER }}/g" environments/prod/simple-bank/kustomization.yaml
+          sed -i -e "s/newTag:.*/newTag: $GITHUB_SHA/g" environments/prod/simple-bank/kustomization.yaml
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
