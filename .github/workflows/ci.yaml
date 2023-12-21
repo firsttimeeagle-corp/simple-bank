@@ -58,6 +58,15 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          path: simple-bank
+
+      - name: Checkout gitops repo
+        uses: actions/checkout@v4
+        with:
+          path: gitops
+          repository: firsttimeeagle-corp/gitops
+          token: ${{ secrets.GH_ACTIONS_PAT }}
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -77,6 +86,16 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./simple-bank
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+
+      - name: Push new image version to gitops
+        working-directory: ./gitops
+        run: |
+          sed -i -e "s/newTag:.*/newTag: ${{ steps.meta.outputs.tags }}/g" environments/dev/simple-bank/kustomization.yaml
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "Update simple-bank dev to ${{ steps.meta.outputs.tags }}"
+          git push
