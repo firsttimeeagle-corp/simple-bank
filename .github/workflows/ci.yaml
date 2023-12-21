@@ -93,7 +93,7 @@ jobs:
       - name: Push new image version to gitops
         working-directory: ./gitops
         run: |
-          sed -i -e "s/newTag:.*/newTag: ${{ steps.meta.outputs.tags }}/g" environments/dev/simple-bank/kustomization.yaml
+          sed -i -e "s/newTag:.*/newTag: $GITHUB_SHA/g" environments/dev/simple-bank/kustomization.yaml
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
