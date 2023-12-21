@@ -24,12 +24,11 @@ jobs:
 
       - name: Promote new image tag
         env:
-          OLD_IMAGE: brizaldi/simple-bank:sha-$GITHUB_SHA
-          NEW_IMAGE: brizaldi/simple-bank:${{ github.event.release.tag_name }}
+          IMAGE: brizaldi/simple-bank:${{ github.event.release.tag_name }}
         run: |
-          docker pull ${{ env.OLD_IMAGE }}
-          docker tag ${{ env.OLD_IMAGE }} ${{ env.NEW_IMAGE }}
-          docker push ${{ env.NEW_IMAGE }}
+          docker pull ${{ env.IMAGE }}-pre
+          docker tag ${{ env.IMAGE }}-pre ${{ env.IMAGE }}
+          docker push ${{ env.IMAGE }}
       
       - name: Push new image version to gitops
         env:
