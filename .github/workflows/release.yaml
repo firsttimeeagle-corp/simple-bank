@@ -28,8 +28,9 @@ jobs:
           OLD_IMAGE: brizaldi/simple-bank:sha-$GITHUB_SHA
           NEW_IMAGE: brizaldi/simple-bank:${{ github.event.release.tag_name }}
         run: |
+          [[ ${{ github.event.release.prerelease }} ]] && prefix="-pre" || prefix=""
           docker pull ${{ env.OLD_IMAGE }}
-          docker tag ${{ env.OLD_IMAGE }} ${{ env.NEW_IMAGE }}
+          docker tag ${{ env.OLD_IMAGE }} ${{ env.NEW_IMAGE }}$prefix
           docker push ${{ env.NEW_IMAGE }}
       
       - name: Push new image version to gitops
