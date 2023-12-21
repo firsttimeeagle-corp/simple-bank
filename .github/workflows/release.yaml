@@ -1,7 +1,6 @@
 name: Release
 
 on:
-  workflow_dispatch:
   release:
     types:
       - "released"
@@ -11,5 +10,6 @@ jobs:
     name: Deploy to production
     runs-on: ubuntu-latest
     steps:
-      - name: Hello world
-        run: echo "Deployed to production"
+      - name: Check release type
+        run: |
+          echo ${{ github.event.release.tag_name }}
