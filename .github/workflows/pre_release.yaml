@@ -50,6 +50,8 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - test
+    env:
+      NEW_VER: ${{ github.event.release.tag_name }}-pre
     steps:
       - name: Checkout gitops repo
         uses: actions/checkout@v4
@@ -63,6 +65,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v2
+
       - name: Promote new image tag
         env:
           OLD_IMAGE: brizaldi/simple-bank:sha-$GITHUB_SHA
@@ -71,10 +76,13 @@ jobs:
           docker pull ${{ env.OLD_IMAGE }}
           docker tag ${{ env.OLD_IMAGE }} ${{ env.NEW_IMAGE }}
           docker push ${{ env.NEW_IMAGE }}
+
+      - name: Update doppler secrets
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_DEV_TOKEN }}
+        run: doppler secrets set APP_VERSION="${{ env.NEW_VER }}"
       
       - name: Push new image version to gitops
-        env:
-          NEW_VER: ${{ github.event.release.tag_name }}-pre
         run: |
           sed -i -e "s/newTag:.*/newTag: ${{ env.NEW_VER }}/g" environments/staging/simple-bank/kustomization.yaml
           git config user.name github-actions
