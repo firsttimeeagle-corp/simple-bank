@@ -79,7 +79,7 @@ jobs:
 
       - name: Update doppler secrets
         env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_DEV_TOKEN }}
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_STAGING_TOKEN }}
         run: doppler secrets set APP_VERSION="${{ env.NEW_VER }}"
       
       - name: Push new image version to gitops
